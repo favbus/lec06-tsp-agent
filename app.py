@@ -3,8 +3,8 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -35,64 +35,35 @@ def random_cities(count: int, seed: int) -> list[City]:
     ]
 
 
-def route_figure(cities: list[City], route: list[int]) -> go.Figure:
+def route_figure(cities: list[City], route: list[int]):
     closed = route + [route[0]]
     xs = [cities[index].x for index in closed]
     ys = [cities[index].y for index in closed]
-    labels = [cities[index].name for index in closed]
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=xs,
-            y=ys,
-            mode="lines+markers+text",
-            text=labels,
-            textposition="top center",
-            marker={"size": 9, "color": "#dc2626"},
-            line={"width": 2.5, "color": "#2563eb"},
-            hovertemplate="%{text}: (%{x:.2f}, %{y:.2f})<extra></extra>",
-        )
-    )
-    fig.update_layout(
-        height=520,
-        margin={"l": 20, "r": 20, "t": 30, "b": 20},
-        xaxis_title="X",
-        yaxis_title="Y",
-        template="plotly_white",
-    )
+    fig, ax = plt.subplots(figsize=(7.5, 5.2), dpi=150)
+    ax.plot(xs, ys, color="#2563eb", linewidth=2.0)
+    ax.scatter([city.x for city in cities], [city.y for city in cities], s=50, color="#dc2626", zorder=3)
+    for city in cities:
+        ax.annotate(city.name, (city.x, city.y), xytext=(5, 5), textcoords="offset points", fontsize=9)
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_title("Best TSP Route")
+    ax.grid(True, alpha=0.25)
+    fig.tight_layout()
     return fig
 
 
-def convergence_figure(solution: dict) -> go.Figure:
+def convergence_figure(solution: dict):
     history = solution["history"]
     df = pd.DataFrame(history)
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=df["temperature_step"],
-            y=df["current_length"],
-            name="当前路线",
-            mode="lines",
-            line={"color": "#7c8aa0", "width": 1.5},
-        )
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=df["temperature_step"],
-            y=df["best_length"],
-            name="历史最优",
-            mode="lines",
-            line={"color": "#0f766e", "width": 2.5},
-        )
-    )
-    fig.update_layout(
-        height=360,
-        margin={"l": 20, "r": 20, "t": 20, "b": 20},
-        xaxis_title="温度轮次",
-        yaxis_title="路线长度",
-        template="plotly_white",
-        legend={"orientation": "h", "y": 1.08},
-    )
+    fig, ax = plt.subplots(figsize=(8, 4.2), dpi=150)
+    ax.plot(df["temperature_step"], df["current_length"], color="#7c8aa0", linewidth=1.4, label="Current route")
+    ax.plot(df["temperature_step"], df["best_length"], color="#0f766e", linewidth=2.0, label="Best route")
+    ax.set_xlabel("Temperature step")
+    ax.set_ylabel("Route length")
+    ax.set_title("Simulated Annealing Convergence")
+    ax.grid(True, alpha=0.25)
+    ax.legend()
+    fig.tight_layout()
     return fig
 
 
@@ -201,9 +172,9 @@ if run_button:
 
     tabs = st.tabs(["路线图", "收敛曲线", "智能体规划", "结果解释", "PDF 报告"])
     with tabs[0]:
-        st.plotly_chart(route_figure(preview_cities, solution["best_route"]), width="stretch")
+        st.pyplot(route_figure(preview_cities, solution["best_route"]), width="stretch")
     with tabs[1]:
-        st.plotly_chart(convergence_figure(solution), width="stretch")
+        st.pyplot(convergence_figure(solution), width="stretch")
         st.dataframe(pd.DataFrame(solution["history"]).tail(20), width="stretch", hide_index=True)
     with tabs[2]:
         st.write(result.get("plan", ""))

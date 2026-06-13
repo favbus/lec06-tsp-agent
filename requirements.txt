@@ -5,6 +5,5 @@ streamlit
 numpy
 pandas
 matplotlib
-plotly
 reportlab
 python-dotenv

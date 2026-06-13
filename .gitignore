@@ -7,4 +7,5 @@ outputs/*.png
 outputs/*.json
 outputs/*.csv
 outputs/
+lec06-tsp-agent/
 .streamlit/secrets.toml
